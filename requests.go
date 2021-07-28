@@ -33,11 +33,12 @@ func postRequest(url string, requestBody map[string]interface{}) ([]byte, error)
 		"application/json",
 		requestBuffer,
 	)
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%v status from external server", resp.StatusCode)
-	}
+
 	if err != nil {
 		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("%v status from external server", resp.StatusCode)
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)

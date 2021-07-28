@@ -19,15 +19,18 @@ func TestFormRequestBuffer(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var unmarshaledBody map[string]string
+	var unmarshalledBody map[string]string
 
-	json.Unmarshal(requestBuffer.Bytes(), &unmarshaledBody)
+	err = json.Unmarshal(requestBuffer.Bytes(), &unmarshalledBody)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	if fmt.Sprint(requestBody) != fmt.Sprint(unmarshaledBody) {
+	if fmt.Sprint(requestBody) != fmt.Sprint(unmarshalledBody) {
 		t.Fatalf(
 			"Json changed after unmarshalling. Before: %v, after: %v",
 			requestBody,
-			unmarshaledBody,
+			unmarshalledBody,
 		)
 	}
 
@@ -39,12 +42,15 @@ func TestPostRequest(t *testing.T) {
 	}
 	marshalledBody, err := json.Marshal(expectedResponseBody)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	ts := httptest.NewServer(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
-			w.Write(marshalledBody)
+			_, err := w.Write(marshalledBody)
+			if err != nil {
+				t.Fatal(err)
+			}
 		}),
 	)
 	defer ts.Close()
@@ -59,7 +65,10 @@ func TestPostRequest(t *testing.T) {
 	}
 
 	var responseBody map[string]string
-	json.Unmarshal(body, &responseBody)
+	err = json.Unmarshal(body, &responseBody)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if fmt.Sprint(expectedResponseBody) != fmt.Sprint(responseBody) {
 		t.Fatalf("Unexpected response: %v != %v", expectedResponseBody, responseBody)
@@ -78,7 +87,20 @@ func TestPostRequestNotOkResponse(t *testing.T) {
 	requestBody := make(map[string]interface{})
 	_, err := postRequest(ts.URL, requestBody)
 
+	if err == nil {
+		t.Fatal("Expected error")
+	}
+
 	if err.Error() != "500 status from external server" {
 		t.Fatalf("Invalid error: %v", err.Error())
+	}
+}
+
+func TestPostRequestWithError(t *testing.T) {
+	requestBody := make(map[string]interface{})
+	_, err := postRequest("fake_url", requestBody)
+
+	if err == nil {
+		t.Fatal("Expected error")
 	}
 }
