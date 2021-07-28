@@ -19,7 +19,10 @@ func TestSendMessage(t *testing.T) {
 	ts := httptest.NewServer(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			body, _ := ioutil.ReadAll(r.Body)
-			json.Unmarshal(body, &callBody)
+			err := json.Unmarshal(body, &callBody)
+			if err != nil {
+				t.Fatal(err)
+			}
 		}),
 	)
 	defer ts.Close()
@@ -40,7 +43,7 @@ func TestSendMessage(t *testing.T) {
 }
 
 func TestGetUpdates(t *testing.T) {
-	updates_response := GetUpdatesResponse{
+	updatesResponse := GetUpdatesResponse{
 		Result: []Update{
 			{
 				UpdateId: 3,
@@ -55,8 +58,11 @@ func TestGetUpdates(t *testing.T) {
 
 	ts := httptest.NewServer(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			marshalledBody, _ := json.Marshal(updates_response)
-			w.Write(marshalledBody)
+			marshalledBody, _ := json.Marshal(updatesResponse)
+			_, err := w.Write(marshalledBody)
+			if err != nil {
+				t.Fatal(err)
+			}
 		}),
 	)
 	defer ts.Close()
@@ -69,8 +75,8 @@ func TestGetUpdates(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if updates[0] != updates_response.Result[0] {
-		t.Fatalf("Unexpected response: %v != %v", updates[0], updates_response.Result[0])
+	if updates[0] != updatesResponse.Result[0] {
+		t.Fatalf("Unexpected response: %v != %v", updates[0], updatesResponse.Result[0])
 	}
 
 }

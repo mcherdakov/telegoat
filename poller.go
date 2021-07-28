@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func (t *TelegramClient) Poll(poll_time time.Duration, updatesHandler func(Update)) {
+func (t *TelegramClient) Poll(pollTime time.Duration, updatesHandler func(Update)) {
 	offset := 0
 	for {
 		updates, err := t.GetUpdates(offset)
@@ -22,6 +22,6 @@ func (t *TelegramClient) Poll(poll_time time.Duration, updatesHandler func(Updat
 			offset = updates[len(updates)-1].UpdateId + 1
 		}
 
-		time.Sleep(poll_time)
+		time.Sleep(pollTime)
 	}
 }
